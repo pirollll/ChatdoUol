@@ -2,28 +2,52 @@ import { Box, Text, TextField, Image } from '@skynexui/components'
 import Button from '@mui/material/Button'
 import React, { useState } from 'react'
 import appConfig from '../config.json'
+import { createClient } from '@supabase/supabase-js'
+
+const SUPABASE_ANOM_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpmanNjaHZkZWJ6cnR0cnp3bW91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDQyODQwMDYsImV4cCI6MTk1OTg2MDAwNn0.xU0f8wAYfeDYNjAZbGjuaKYA_a10mzt6iR_i9q-OU6k"
+const SUPABASE_URL = "https://zfjschvdebzrttrzwmou.supabase.co"
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANOM_KEY)
 
 export default function ChatPage() {
     const [mensagem, setMensagem] = useState('')
     const [lista, setLista] = useState([])
     const textAreaMsg = React.createRef()
 
+    React.useEffect(()=>(
+        supabaseClient
+            .from('mensagens')
+            .select('*')
+            .order('id', {ascending: false})
+            .then(({data})=>{
+                //console.log(data)
+                setLista(data)
+            })
+    ),[])
+
     function handleNovaMensagem(novaMsg) {
         if (novaMsg.length < 1) {
             return false
         }
         const mensagem = {
-            id: lista.length + 1,
+            // id: lista.length + 1,
             from: 'pirollll',
             texto: novaMsg
         }
-        setLista([mensagem, ...lista])
+        supabaseClient
+            .from('mensagens')
+            .insert([
+                mensagem
+            ])
+            .then(({data})=>{
+                console.log(data[0])
+                setLista([data[0], ...lista])
+            })
         setMensagem('')
     }
 
     function handleTextAreaMsg() {
         handleNovaMensagem(mensagem)
-        console.log(textAreaMsg.current.focus())
+        //console.log(textAreaMsg.current.focus())
     }
 
     return (
@@ -145,69 +169,67 @@ function MessageList(props) {
     //const mensagem = props.mensagens
     //console.log(props.mensagens)
     return (
-        <Box
-            tag="ul"
-            styleSheet={{
-                overflow: 'scroll',
-                overflowX: 'hidden',
-                display: 'flex',
-                flexDirection: 'column-reverse',
-                flex: 1,
-                color: appConfig.theme.colors.neutrals["000"],
-                marginBottom: '16px',
-            }}
-        >
-            {props.mensagens.map((mensagem) => {
-                return (
+            <Box
+                tag="ul"
+                styleSheet={{
+                    overflow: 'scroll',
+                    overflowX: 'hidden',
+                    display: 'flex',
+                    flexDirection: 'column-reverse',
+                    flex: 1,
+                    color: appConfig.theme.colors.neutrals["000"],
+                    marginBottom: '16px',
+                }}
+            >
+                {props.mensagens.map((mensagem) => {
+                    return (
 
-                    <Text
-                        key={mensagem.id}
-                        tag="li"
-                        styleSheet={{
-                            borderRadius: '5px',
-                            padding: '6px',
-                            marginBottom: '12px',
-                            hover: {
-                                backgroundColor: appConfig.theme.colors.neutrals[700],
-                            }
-                        }}
-                    >
-                        <Box
+                        <Text
+                            key={mensagem.id}
+                            tag="li"
                             styleSheet={{
-                                marginBottom: '8px',
+                                borderRadius: '5px',
+                                padding: '6px',
+                                marginBottom: '12px',
+                                hover: {
+                                    backgroundColor: appConfig.theme.colors.neutrals[700],
+                                }
                             }}
                         >
-                            <Image
+                            <Box
                                 styleSheet={{
-                                    width: '20px',
-                                    height: '20px',
-                                    borderRadius: '50%',
-                                    display: 'inline-block',
-                                    marginRight: '8px',
+                                    marginBottom: '8px',
                                 }}
-                                src={`https://github.com/${mensagem.from}.png`}
-                            />
-                            <Text tag="strong">
-                                {mensagem.from}
-                            </Text>
-                            <Text
-                                styleSheet={{
-                                    fontSize: '10px',
-                                    marginLeft: '8px',
-                                    color: appConfig.theme.colors.neutrals[300],
-                                }}
-                                tag="span"
                             >
-                                {(new Date().toLocaleDateString())}
-                            </Text>
-                        </Box>
-                        {mensagem.texto}
-                    </Text>
-
-                )
-            }
-
-            )}
-        </Box>
+                                <Image
+                                    styleSheet={{
+                                        width: '20px',
+                                        height: '20px',
+                                        borderRadius: '50%',
+                                        display: 'inline-block',
+                                        marginRight: '8px',
+                                    }}
+                                    src={`https://github.com/${mensagem.from}.png`}
+                                />
+                                <Text tag="strong">
+                                    {mensagem.from}
+                                </Text>
+                                <Text
+                                    styleSheet={{
+                                        fontSize: '10px',
+                                        marginLeft: '8px',
+                                        color: appConfig.theme.colors.neutrals[300],
+                                    }}
+                                    tag="span"
+                                >
+                                    {(new Date().toLocaleDateString())}
+                                </Text>
+                            </Box>
+                            {mensagem.texto}
+                        </Text>
+                    )
+                }
+                )}
+            </Box>
     )
 }
