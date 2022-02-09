@@ -3,6 +3,7 @@ import Button from '@mui/material/Button'
 import React, { useState } from 'react'
 import appConfig from '../config.json'
 import { createClient } from '@supabase/supabase-js'
+import Loading from './loading'
 
 const SUPABASE_ANOM_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpmanNjaHZkZWJ6cnR0cnp3bW91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDQyODQwMDYsImV4cCI6MTk1OTg2MDAwNn0.xU0f8wAYfeDYNjAZbGjuaKYA_a10mzt6iR_i9q-OU6k"
 const SUPABASE_URL = "https://zfjschvdebzrttrzwmou.supabase.co"
@@ -13,16 +14,31 @@ export default function ChatPage() {
     const [lista, setLista] = useState([])
     const textAreaMsg = React.createRef()
 
-    React.useEffect(()=>(
+    React.useEffect(()=>{
+        //
+        telaLoading(1)
+        //
         supabaseClient
             .from('mensagens')
             .select('*')
             .order('id', {ascending: false})
             .then(({data})=>{
-                //console.log(data)
                 setLista(data)
+                telaLoading(0)
+                const load = document.getElementsByClassName('MuiBox-root')
+                load[0] != undefined ? load[0].remove() : false
             })
-    ),[])
+        },[])
+
+    function telaLoading(props) {
+        if (props === 1) {
+            return (
+                <Loading />
+            )
+        } else if (props === 0){
+            // console.log(props);
+        }
+    }
 
     function handleNovaMensagem(novaMsg) {
         if (novaMsg.length < 1) {
@@ -148,6 +164,7 @@ function Header() {
                 <Text variant='heading5'>
                     Chat
                 </Text>
+                <Loading  />
                 <Button
                     variant='contained'
                     href="/"
